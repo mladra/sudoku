@@ -175,7 +175,7 @@ function App() {
 
 
   return (
-    <>
+    <div onMouseUp={handleMouseUp}>
       <div className="top-bar">
         {hours}:{minutes}:{seconds}
       </div>
@@ -193,7 +193,6 @@ function App() {
                     style={styling(rowIdx, colIdx, cell)}
                     onClick={handleCellClick(rowIdx, colIdx)}
                     onMouseDown={handleMouseDown(rowIdx, colIdx)}
-                    onMouseUp={handleMouseUp}
                     onMouseEnter={handleCellMouseEnter(rowIdx, colIdx)}>
                     <h2>{cell.value}</h2>
                   </div>)
@@ -224,7 +223,7 @@ function App() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
