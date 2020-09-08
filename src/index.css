@@ -13,7 +13,6 @@ body {
 
 .game {
   flex: 60%;
-  justify-content: center;
 }
 
 .controls {
@@ -30,28 +29,36 @@ body {
 .row {
   display: flex;
   flex-direction: row;
+  justify-content: center;
 }
 
 .row-item {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   display: flex;
   padding: 0.5em;
   align-items: center;
   justify-content: center;
-  border: 1px solid black;
   cursor: pointer;
-}
-
-.square {
-  border: 1px solid black;
 }
 
 .nums-button {
   margin: 0.5em;
   width: 100px;
-  height: 75px;
-  border-radius: 30%;
+  height: 50px;
+  border-radius: 10px;
+  border: 3px solid gray;
+  background-color: transparent;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.nums-button:hover {
+  background-color: lightgray;
+}
+
+.nums-button:active {
+  background-color: darkgray;
 }
 
 .top-bar {
