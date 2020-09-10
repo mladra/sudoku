@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
-import initialCells from "./board.json";
-import solution from "./solution.json";
+import initialCells from "./puzzles/board.json";
 
 function App() {
   const rows = 9;
@@ -10,7 +9,23 @@ function App() {
   const selectedColor = "#F0E68C";
   const white = "#FFFFFF";
 
-  const [cells, setCells] = useState(new Array(rows).fill().map(() => new Array(cols).fill().map(() => Object.assign({}, { color: white, value: "", selected: false }))));
+  const initialCellValue = {
+    color: white,
+    value: "",
+    selected: false,
+    corners: [],
+    editable: true
+  };
+  const initialBoard = new Array(rows).fill().map(() => new Array(cols).fill().map(() => Object.assign({}, initialCellValue)));
+  const [cells, setCells] = useState(initialCells.map(cellRow => cellRow.map(cell => {
+    return {
+      color: initialCellValue.color,
+      value: cell.value,
+      selected: initialCellValue.selected,
+      corners: initialCellValue.corners,
+      editable: cell.value ? false : true
+    }
+  })));
   const startTime = Date.now();
 
   const [hours, setHours] = useState("00");
@@ -79,6 +94,29 @@ function App() {
     return () => document.removeEventListener("keyup", listenForKeyRelease);
   }, []);
 
+  useEffect(() => {
+    const listenForNumKeyPress = event => {
+      const num = Number(event.key);
+      if (!Number.isNaN(num) && num >= 1 && num <= 9) {
+        changeCellsNumber(event.key);
+      }
+    };
+
+    document.addEventListener("keydown", listenForNumKeyPress);
+    return () => document.removeEventListener("keydown", listenForNumKeyPress);
+  }, []);
+
+  useEffect(() => {
+    const listenForDeleteKey = event => {
+      if (event.key === "Delete") {
+        eraseCellsValue();
+      }
+    };
+
+    document.addEventListener("keydown", listenForDeleteKey);
+    return () => document.removeEventListener("keydown", listenForDeleteKey);
+  });
+
   const formatTime = (t) => {
     return ("0" + t).slice(-2);
   };
@@ -95,8 +133,12 @@ function App() {
   };
 
   const handleButtonClick = (value) => () => {
+    changeCellsNumber(value);
+  };
+
+  const changeCellsNumber = value => {
     const newCells = cells.map(cellsRow => cellsRow.map(cell => {
-      if (cell.selected) cell.value = value;
+      if (cell.selected && cell.editable) cell.value = value;
       return cell;
     }));
 
@@ -104,6 +146,10 @@ function App() {
   };
 
   const handleDeleteButtonClick = () => {
+    eraseCellsValue();
+  };
+
+  const eraseCellsValue = () => {
     const newCells = cells.map(cellsRow => cellsRow.map(cell => {
       if (cell.selected) cell.value = "";
       return cell;
@@ -118,14 +164,40 @@ function App() {
   };
 
   const checkIfSolved = () => {
-    const arr1 = cells.flatMap(row => row.map(r => r.value));
-    const arr2 = solution.flatMap(row => row.map(r => r.value));
-    const missing = arr1.find((num, idx) => arr2[idx] !== num);
-    return missing === undefined;
+    for (let i = 0; i < 9; i++) {
+      for (let j = 0; j < 9; j++) {
+        const num = cells[i][j].value;
+        if (!num) return false;
+
+        const occurrencesRow = cells[i].reduce((a, b) => (b.value === num ? a + 1 : a), 0);
+
+        let occurrencesCol = 0;
+        for (let k = 0; k < 9; k++) {
+          if (cells[k][j].value === num) {
+            occurrencesCol++;
+          }
+        }
+
+        let occurrencesSquare = 0;
+        const [rowMin, rowMax] = i < 3 ? [0, 2] : i < 6 ? [3, 5] : [6, 8];
+        const [colMin, colMax] = j < 3 ? [0, 2] : j < 6 ? [3, 5] : [6, 8];
+        for (let k = rowMin; k <= rowMax; k++) {
+          for (let l = colMin; l <= colMax; l++) {
+            if (cells[k][l].value === num) {
+              occurrencesSquare++;
+            }
+          }
+        }
+
+        if (occurrencesRow !== 1 || occurrencesCol !== 1 || occurrencesSquare !== 1) return false;
+      }
+    }
+
+    return true;
   };
 
   const handleRestartButtonClick = () => {
-    //TODO: mladra: To implement...
+    setCells(initialBoard);
   };
 
   const handleCellMouseEnter = (rowIdx, colIdx) => event => {
@@ -147,10 +219,10 @@ function App() {
   };
 
   const styling = (rowIdx, colIdx, cell) => {
-    const styling = { 
+    const styling = {
       backgroundColor: cell.color,
       borderRight: "1px solid black",
-      borderBottom: "1px solid black" 
+      borderBottom: "1px solid black"
     };
 
     if (rowIdx === 0) {
@@ -171,8 +243,6 @@ function App() {
 
     return styling;
   };
-
-
 
   return (
     <div onMouseUp={handleMouseUp}>

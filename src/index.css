@@ -4,6 +4,7 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  font-family: sans-serif;
 }
 
 .container {
@@ -72,4 +73,21 @@ body {
   flex-direction: row;
   justify-content: center;
   align-items: center;
+}
+
+.corner-tl {
+  width: 50%;
+}
+
+.corner-tr {
+  margin-left: auto;
+}
+
+.corner-br {
+  margin-left: auto;
+  margin-top: auto;
+}
+
+.corner-bl {
+  margin-top: auto;
 }
