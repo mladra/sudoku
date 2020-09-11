@@ -64,7 +64,6 @@ function App() {
 
   useEffect(() => {
     const handleClickOutside = event => {
-      console.log(event);
       if (event.target && (event.target.type === "button" || event.target.type === "select-one" || event.target.localName === "option")) return;
 
       if (gameDivRef.current && !gameDivRef.current.contains(event.target)) {
@@ -205,7 +204,7 @@ function App() {
 
   const changeVariant = event => {
     const newVariant = event.target.value;
-    setVariant(newVariant); 
+    setVariant(newVariant);
     const board = newVariant === "1" ? easyBoard : newVariant === "2" ? mediumBoard : hardBoard;
     setCells(loadVariant(board));
     setHours("00");
@@ -223,7 +222,14 @@ function App() {
   return (
     <div onMouseUp={handleMouseUp}>
       <div className="top-bar">
-        {hours}:{minutes}:{seconds}
+        <p>{hours}:{minutes}:{seconds}</p>
+        <div>
+          <select name="sudoku-select" id="sudoku-select" style={{ marginBottom: "20px" }} onChange={changeVariant} value={variant}>
+            <option value="1">Easy</option>
+            <option value="2">Medium</option>
+            <option value="3">Hard</option>
+          </select>
+        </div>
       </div>
       <div className="container">
         <div ref={gameDivRef} className="game">
@@ -244,7 +250,7 @@ function App() {
                         ${rowIdx === 2 || rowIdx === 5 || rowIdx === 8 ? 'item-border-bottom' : ''}
                         ${colIdx === 2 || colIdx === 5 || colIdx === 8 ? 'item-border-right' : ''}
                         `}
-                      style={{ 
+                      style={{
                         backgroundColor: cell.selected ? cell.color ? addColors(cell.color, selectedColor) : selectedColor : cell.color,
                         color: cell.editable ? "#0080ff" : "black"
                       }}
@@ -260,13 +266,6 @@ function App() {
 
         <div className="controls">
           <div className="col">
-            <h2 style={{ textAlign: "center" }}>Controls</h2>
-            <label htmlFor="sudoku-select">Choose variant:</label>
-            <select name="sudoku-select" id="sudoku-select" style={{ marginBottom: "20px" }} onChange={changeVariant} value={variant}>
-              <option value="1">Easy</option>
-              <option value="2">Medium</option>
-              <option value="3">Hard</option>
-            </select>
             {
               nums.map(numsRow =>
                 <div className="row" key={`nums-row-${numsRow}`}>
