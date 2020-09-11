@@ -244,7 +244,10 @@ function App() {
                         ${rowIdx === 2 || rowIdx === 5 || rowIdx === 8 ? 'item-border-bottom' : ''}
                         ${colIdx === 2 || colIdx === 5 || colIdx === 8 ? 'item-border-right' : ''}
                         `}
-                      style={{ backgroundColor: cell.selected ? cell.color ? addColors(cell.color, selectedColor) : selectedColor : cell.color }}
+                      style={{ 
+                        backgroundColor: cell.selected ? cell.color ? addColors(cell.color, selectedColor) : selectedColor : cell.color,
+                        color: cell.editable ? "#0080ff" : "black"
+                      }}
                       onClick={handleCellClick(rowIdx, colIdx)}
                       onMouseDown={handleMouseDown(rowIdx, colIdx)}
                       onMouseEnter={handleCellMouseEnter(rowIdx, colIdx)}>
