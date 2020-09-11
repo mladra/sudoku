@@ -7,8 +7,10 @@ import Color from 'color';
 
 function App() {
   const nums = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-  const selectedColor = "#F0E68C";
+  const selectedColorSecondary = "#F0E68C";
+  const selectedColorPrimary = "#E8D41C";
   const [variant, setVariant] = useState("1");
+  const [selectedValue, setSelectedValue] = useState(null);
 
   const initialCellValue = {
     color: "",
@@ -71,7 +73,8 @@ function App() {
           cell.selected = false;
           return cell;
         }));
-
+        
+        setSelectedValue(null);
         setCells(newCells);
       }
     }
@@ -108,11 +111,14 @@ function App() {
   }, []);
 
   const handleCellClick = (rowIdx, colIdx) => () => {
+    setSelectedValue(null);
     const newCells = isControlDown ? [...cells] : cells.map(row => row.map(cell => {
       cell.selected = false;
       return cell;
     }));
     newCells[rowIdx][colIdx].selected = true;
+    const value = newCells[rowIdx][colIdx].value;
+    setSelectedValue(value ? value : null);
     setCells(newCells);
   };
 
@@ -251,7 +257,11 @@ function App() {
                         ${colIdx === 2 || colIdx === 5 || colIdx === 8 ? 'item-border-right' : ''}
                         `}
                       style={{
-                        backgroundColor: cell.selected ? cell.color ? addColors(cell.color, selectedColor) : selectedColor : cell.color,
+                        backgroundColor:
+                          cell.selected ?
+                            cell.color ? addColors(cell.color, selectedColorPrimary) : selectedColorPrimary
+                            : selectedValue !== null && selectedValue === cell.value ?
+                              selectedColorSecondary : cell.color,
                         color: cell.editable ? "#0080ff" : "black"
                       }}
                       onClick={handleCellClick(rowIdx, colIdx)}
