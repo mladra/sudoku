@@ -133,6 +133,7 @@ function App() {
     }));
 
     setCells(newCells);
+    setSelectedValue(value);
   };
 
   const handleDeleteButtonClick = () => {
