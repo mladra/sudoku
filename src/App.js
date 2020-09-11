@@ -1,32 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
-import initialCells from "./puzzles/board.json";
+import easyBoard from "./puzzles/easy.json";
+import mediumBoard from "./puzzles/medium.json";
+import hardBoard from "./puzzles/hard.json";
+import Color from 'color';
 
 function App() {
-  const rows = 9;
-  const cols = 9;
   const nums = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
   const selectedColor = "#F0E68C";
-  const white = "#FFFFFF";
+  const [variant, setVariant] = useState("1");
 
   const initialCellValue = {
-    color: white,
+    color: "",
     value: "",
     selected: false,
     corners: [],
     editable: true
   };
-  const initialBoard = new Array(rows).fill().map(() => new Array(cols).fill().map(() => Object.assign({}, initialCellValue)));
-  const [cells, setCells] = useState(initialCells.map(cellRow => cellRow.map(cell => {
-    return {
-      color: initialCellValue.color,
-      value: cell.value,
-      selected: initialCellValue.selected,
-      corners: initialCellValue.corners,
-      editable: cell.value ? false : true
-    }
-  })));
-  const startTime = Date.now();
+  const [startTime, setStartTime] = useState(Date.now());
 
   const [hours, setHours] = useState("00");
   const [minutes, setMinutes] = useState("00");
@@ -36,6 +27,20 @@ function App() {
   const [isControlDown, setControlDown] = useState(false);
 
   const gameDivRef = useRef(null);
+
+  const loadVariant = board => {
+    return board.map(row => row.map(cell => {
+      return {
+        color: initialCellValue.color,
+        value: cell.value,
+        selected: initialCellValue.selected,
+        corners: initialCellValue.corners,
+        editable: cell.value ? false : true
+      }
+    }));
+  };
+
+  const [cells, setCells] = useState(loadVariant(easyBoard));
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -51,16 +56,20 @@ function App() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [startTime]);
+
+  const formatTime = (t) => {
+    return ("0" + t).slice(-2);
+  };
 
   useEffect(() => {
     const handleClickOutside = event => {
-      if (event.target.type === "button") return;
+      console.log(event);
+      if (event.target && (event.target.type === "button" || event.target.type === "select-one" || event.target.localName === "option")) return;
 
       if (gameDivRef.current && !gameDivRef.current.contains(event.target)) {
         const newCells = cells.map(cellsRow => cellsRow.map(cell => {
           cell.selected = false;
-          cell.color = white;
           return cell;
         }));
 
@@ -69,66 +78,42 @@ function App() {
     }
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);;
-  }, [gameDivRef]);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [gameDivRef, cells]);
 
   useEffect(() => {
     const listenForKeyPress = event => {
-      if (event.keyCode === 17) {
+      const num = Number(event.key);
+      if (!Number.isNaN(num) && num >= 1 && num <= 9) {
+        changeCellsNumber(event.key);
+      } else if (event.key === "Delete") {
+        eraseCellsValue();
+      } else if (event.key === "Control") {
         setControlDown(true);
       }
     };
 
-    document.addEventListener("keydown", listenForKeyPress);
-    return () => document.removeEventListener("keydown", listenForKeyPress);
-  }, []);
-
-  useEffect(() => {
     const listenForKeyRelease = event => {
-      if (event.keyCode === 17) {
+      if (event.key === "Control") {
         setControlDown(false);
       }
     };
 
+    document.addEventListener("keydown", listenForKeyPress);
     document.addEventListener("keyup", listenForKeyRelease);
-    return () => document.removeEventListener("keyup", listenForKeyRelease);
+    return () => {
+      document.removeEventListener("keydown", listenForKeyPress);
+      document.removeEventListener("keyup", listenForKeyRelease);
+    }
+    // eslint-disable-next-line
   }, []);
-
-  useEffect(() => {
-    const listenForNumKeyPress = event => {
-      const num = Number(event.key);
-      if (!Number.isNaN(num) && num >= 1 && num <= 9) {
-        changeCellsNumber(event.key);
-      }
-    };
-
-    document.addEventListener("keydown", listenForNumKeyPress);
-    return () => document.removeEventListener("keydown", listenForNumKeyPress);
-  }, []);
-
-  useEffect(() => {
-    const listenForDeleteKey = event => {
-      if (event.key === "Delete") {
-        eraseCellsValue();
-      }
-    };
-
-    document.addEventListener("keydown", listenForDeleteKey);
-    return () => document.removeEventListener("keydown", listenForDeleteKey);
-  });
-
-  const formatTime = (t) => {
-    return ("0" + t).slice(-2);
-  };
 
   const handleCellClick = (rowIdx, colIdx) => () => {
     const newCells = isControlDown ? [...cells] : cells.map(row => row.map(cell => {
       cell.selected = false;
-      cell.color = white;
       return cell;
     }));
     newCells[rowIdx][colIdx].selected = true;
-    newCells[rowIdx][colIdx].color = selectedColor;
     setCells(newCells);
   };
 
@@ -151,7 +136,7 @@ function App() {
 
   const eraseCellsValue = () => {
     const newCells = cells.map(cellsRow => cellsRow.map(cell => {
-      if (cell.selected) cell.value = "";
+      if (cell.selected && cell.editable) cell.value = "";
       return cell;
     }));
 
@@ -197,14 +182,14 @@ function App() {
   };
 
   const handleRestartButtonClick = () => {
-    setCells(initialBoard);
+    const board = variant === "1" ? easyBoard : variant === "2" ? mediumBoard : hardBoard;
+    setCells(loadVariant(board));
   };
 
   const handleCellMouseEnter = (rowIdx, colIdx) => event => {
     if (isMouseDown) {
       const newCells = [...cells];
       newCells[rowIdx][colIdx].selected = true;
-      newCells[rowIdx][colIdx].color = selectedColor;
       setCells(newCells);
     }
   };
@@ -218,30 +203,21 @@ function App() {
     setMouseDown(false);
   };
 
-  const styling = (rowIdx, colIdx, cell) => {
-    const styling = {
-      backgroundColor: cell.color,
-      borderRight: "1px solid black",
-      borderBottom: "1px solid black"
-    };
+  const changeVariant = event => {
+    const newVariant = event.target.value;
+    setVariant(newVariant); 
+    const board = newVariant === "1" ? easyBoard : newVariant === "2" ? mediumBoard : hardBoard;
+    setCells(loadVariant(board));
+    setHours("00");
+    setMinutes("00");
+    setSeconds("00");
+    setStartTime(Date.now());
+  };
 
-    if (rowIdx === 0) {
-      styling.borderTop = "3px solid black";
-    }
-
-    if (colIdx === 0) {
-      styling.borderLeft = "3px solid black";
-    }
-
-    if (rowIdx === 8 || rowIdx === 2 || rowIdx === 5) {
-      styling.borderBottom = "3px solid black";
-    }
-
-    if (colIdx === 8 || colIdx === 2 || colIdx === 5) {
-      styling.borderRight = "3px solid black";
-    }
-
-    return styling;
+  const addColors = (c1, c2) => {
+    const color1 = Color(c1);
+    const color2 = Color(c2);
+    return color1.mix(color2);
   };
 
   return (
@@ -251,29 +227,43 @@ function App() {
       </div>
       <div className="container">
         <div ref={gameDivRef} className="game">
-          {cells.map((row, rowIdx) =>
-            <div className="row" key={`row-${rowIdx}`}>
-              {
-                row.map((cell, colIdx) =>
-                  <div
-                    key={`${rowIdx}-${colIdx}`}
-                    type="button"
-                    id="id"
-                    className="row-item"
-                    style={styling(rowIdx, colIdx, cell)}
-                    onClick={handleCellClick(rowIdx, colIdx)}
-                    onMouseDown={handleMouseDown(rowIdx, colIdx)}
-                    onMouseEnter={handleCellMouseEnter(rowIdx, colIdx)}>
-                    <h2>{cell.value}</h2>
-                  </div>)
-              }
-            </div>
-          )}
+          {
+            cells.map((row, rowIdx) =>
+              <div className="row" key={`row-${rowIdx}`}>
+                {
+                  row.map((cell, colIdx) =>
+                    <div
+                      key={`${rowIdx}-${colIdx}`}
+                      type="button"
+                      id="id"
+                      className={`
+                        row-item 
+                        item-border 
+                        ${rowIdx === 0 ? 'item-border-top' : ''} 
+                        ${colIdx === 0 ? 'item-border-left' : ''}
+                        ${rowIdx === 2 || rowIdx === 5 || rowIdx === 8 ? 'item-border-bottom' : ''}
+                        ${colIdx === 2 || colIdx === 5 || colIdx === 8 ? 'item-border-right' : ''}
+                        `}
+                      style={{ backgroundColor: cell.selected ? cell.color ? addColors(cell.color, selectedColor) : selectedColor : cell.color }}
+                      onClick={handleCellClick(rowIdx, colIdx)}
+                      onMouseDown={handleMouseDown(rowIdx, colIdx)}
+                      onMouseEnter={handleCellMouseEnter(rowIdx, colIdx)}>
+                      <h2>{cell.value}</h2>
+                    </div>)
+                }
+              </div>
+            )}
         </div>
 
         <div className="controls">
           <div className="col">
             <h2 style={{ textAlign: "center" }}>Controls</h2>
+            <label htmlFor="sudoku-select">Choose variant:</label>
+            <select name="sudoku-select" id="sudoku-select" style={{ marginBottom: "20px" }} onChange={changeVariant} value={variant}>
+              <option value="1">Easy</option>
+              <option value="2">Medium</option>
+              <option value="3">Hard</option>
+            </select>
             {
               nums.map(numsRow =>
                 <div className="row" key={`nums-row-${numsRow}`}>
@@ -291,6 +281,11 @@ function App() {
               <button type="button" className="nums-button" onClick={handleRestartButtonClick}>Restart</button>
             </div>
           </div>
+        </div>
+      </div>
+      <div className="footer">
+        <div>
+          Icons made by <a href="https://www.flaticon.com/authors/surang" title="surang">surang</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
         </div>
       </div>
     </div>
